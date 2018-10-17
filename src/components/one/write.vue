@@ -5,16 +5,7 @@
         <el-form-item label="项目名称" prop="name">
             <el-input v-model="ruleForm.name"></el-input>
         </el-form-item>
-        <el-form-item label="项目人员" prop="region">
-            <el-checkbox-group v-model="ruleForm.type">
-            <el-checkbox label="A" name="type"></el-checkbox>
-            <el-checkbox label="B" name="type"></el-checkbox>
-            <el-checkbox label="C" name="type"></el-checkbox>
-            <el-checkbox label="D" name="type"></el-checkbox>
-            <el-checkbox label="E" name="type"></el-checkbox>
-            <el-checkbox label="F" name="type"></el-checkbox>
-            </el-checkbox-group>
-        </el-form-item>
+       
         <el-form-item label="项目时间" required>
             <el-col :span="11">
             <el-form-item prop="date1">
@@ -36,8 +27,8 @@
             </el-checkbox-group>
         </el-form-item>
         
-        <el-form-item label="项目日报" prop="desc">
-            <el-input type="textarea" v-model="ruleForm.desc"></el-input>
+        <el-form-item label="项目日报" prop="content">
+            <el-input type="textarea" v-model="ruleForm.content"></el-input>
         </el-form-item>
         <el-form-item>
             <el-button type="primary" @click="submitForm('ruleForm')">立即创建</el-button>
@@ -47,27 +38,23 @@
     </div>
 </template>
 <script>
+    import axios from 'axios'
     export default {
     data() {
       return {
         ruleForm: {
-          name: '',
-          region: '',
+          name: '',       //项目名称         
           date1: '',
           date2: '',
-          delivery: false,
-          type: [],
-          resource: '',
-          desc: ''
+          type: [],       //项目性质
+          content: ''     //项目内容
         },
         rules: {
           name: [
             { required: true, message: '请输入项目名称', trigger: 'blur' },
             { min: 3, max: 5, message: '长度在 3 到 5 个字符', trigger: 'blur' }
           ],
-          region: [
-            { type: 'array', required: true, message: '请至少选择一位成员', trigger: 'change' }
-          ],
+          
           date1: [
             { type: 'date', required: true, message: '请选择日期', trigger: 'change' }
           ],
@@ -77,20 +64,19 @@
           type: [
             { type: 'array', required: true, message: '请至少选择一个项目性质', trigger: 'change' }
           ],
-          resource: [
-            { required: true, message: '请选择活动资源', trigger: 'change' }
-          ],
-          desc: [
+          content: [
             { required: true, message: '请填写项目简介', trigger: 'blur' }
           ]
         }
       };
     },
+    
     methods: {
-      submitForm(formName) {
-        this.$refs[formName].validate((valid) => {
+      submitForm(ruleForm) {
+        this.$refs[ruleForm].validate((valid) => {
           if (valid) {
-            alert('submit!');
+            console.log('成功');
+            console.log(this.ruleForm)
           } else {
             console.log('error submit!!');
             return false;
@@ -100,7 +86,23 @@
       resetForm(formName) {
         this.$refs[formName].resetFields();
       }
-    }
+    },
+    created(){
+        axios({
+            url:"http://192.168.61.40:9081/daily",
+            method: 'post',
+            headers:{
+                'Content-type': 'application/x-www-form-urlencoded'
+            },
+            data:{
+              content:this.ruleForm.content,
+              create_at:this.ruleForm.date1 + this.ruleForm.date2
+            }
+        })
+        .then((res)=>{
+          console.log(res.data)
+        })     
+    },
   }
 </script>
 <style scoped>
