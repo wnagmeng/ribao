@@ -1,11 +1,7 @@
 <template>
     <div id="write">
         <h3>编写日报</h3>
-        <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
-        <el-form-item label="项目名称" prop="name">
-            <el-input v-model="ruleForm.name"></el-input>
-        </el-form-item>
-       
+        <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">      
         <el-form-item label="项目时间" required>
             <el-col :span="11">
             <el-form-item prop="date1">
@@ -19,11 +15,11 @@
             </el-form-item>
             </el-col>
         </el-form-item>
-        <el-form-item label="项目性质" prop="type">
+        <el-form-item label="人员id" prop="type">
             <el-checkbox-group v-model="ruleForm.type">
-            <el-checkbox label="公司重要项目" name="type"></el-checkbox>
-            <el-checkbox label="推广项目" name="type"></el-checkbox>
-            <el-checkbox label="内部项目" name="type"></el-checkbox>
+            <el-checkbox label="a" name="type"></el-checkbox>
+            <el-checkbox label="b" name="type"></el-checkbox>
+            <el-checkbox label="c" name="type"></el-checkbox>
             </el-checkbox-group>
         </el-form-item>
         
@@ -38,81 +34,107 @@
     </div>
 </template>
 <script>
-    import axios from 'axios'
-    export default {
-    data() {
-      return {
-        ruleForm: {
-          name: '',       //项目名称         
-          date1: '',
-          date2: '',
-          type: [],       //项目性质
-          content: ''     //项目内容
-        },
-        rules: {
-          name: [
-            { required: true, message: '请输入项目名称', trigger: 'blur' },
-            { min: 3, max: 5, message: '长度在 3 到 5 个字符', trigger: 'blur' }
-          ],
-          
-          date1: [
-            { type: 'date', required: true, message: '请选择日期', trigger: 'change' }
-          ],
-          date2: [
-            { type: 'date', required: true, message: '请选择时间', trigger: 'change' }
-          ],
-          type: [
-            { type: 'array', required: true, message: '请至少选择一个项目性质', trigger: 'change' }
-          ],
-          content: [
-            { required: true, message: '请填写项目简介', trigger: 'blur' }
-          ]
-        }
-      };
-    },
-    
-    methods: {
-      submitForm(ruleForm) {
-        this.$refs[ruleForm].validate((valid) => {
-          if (valid) {
-            console.log('成功');
-            console.log(this.ruleForm)
-          } else {
-            console.log('error submit!!');
-            return false;
-          }
-        });
+import axios from "axios";
+export default {
+  data() {
+    return {
+      ruleForm: {
+        date1: "",
+        date2: "",
+        type: [],
+        content: "" //项目内容
       },
-      resetForm(formName) {
-        this.$refs[formName].resetFields();
+      rules: {
+        date1: [
+          {
+            type: "date",
+            required: true,
+            message: "请选择日期",
+            trigger: "change"
+          }
+        ],
+        date2: [
+          {
+            type: "date",
+            required: true,
+            message: "请选择时间",
+            trigger: "change"
+          }
+        ],
+        type: [{ type: "array" }],
+        content: [
+          { required: true, message: "请填写项目简介", trigger: "blur" }
+        ]
       }
+    };
+  },
+  methods: {
+    //发送表单
+    submitForm(ruleForm) {
+      this.$refs[ruleForm].validate(valid => {
+
+        if (valid) {
+          var url = "http://192.168.61.40:9081/daily";
+          //时间格式转换
+          var date = new Date();
+          date =
+            date.getFullYear() +
+            "-" +
+            (date.getMonth() + 1) +
+            "-" +
+            date.getDate() +
+            " " +
+            date.getHours() +
+            ":" +
+            date.getMinutes() +
+            ":" +
+            date.getSeconds();
+          //发送的数据
+          var params = {
+            content: this.ruleForm.content,
+            date: date,
+            personId: parseInt(this.ruleForm.type.length)
+          };
+          axios
+            .post(url, JSON.stringify(params), {
+              headers: {
+                "Content-Type": "application/json"
+              }
+            })
+            .then(res => {
+              console.log(res);
+              if (res.status == 200) {
+                if (res.data.errorCode) {
+                  this.$message(res.data.message);
+                } else {
+                  this.$message({
+                    message: "恭喜你，添加单组成功",
+                    type: "success"
+                  });
+                  this.addVisible = false;
+                }
+              }
+            });
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
     },
-    created(){
-        axios({
-            url:"http://192.168.61.40:9081/daily",
-            method: 'post',
-            headers:{
-                'Content-type': 'application/x-www-form-urlencoded'
-            },
-            data:{
-              content:this.ruleForm.content,
-              create_at:this.ruleForm.date1 + this.ruleForm.date2
-            }
-        })
-        .then((res)=>{
-          console.log(res.data)
-        })     
-    },
+    resetForm(formName) {
+      this.$refs[formName].resetFields();
+    }
   }
+};
 </script>
 <style scoped>
-    #write{
-        width:80%;
-        margin:100px auto;
-    }
-    #write h3{
-        font-size: 30px !important;
-        text-align: center;
-        line-height: 100px;
-    }
+#write {
+  width: 80%;
+  margin: 100px auto;
+}
+#write h3 {
+  font-size: 30px !important;
+  text-align: center;
+  line-height: 100px;
+}
 </style>
